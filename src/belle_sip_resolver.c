@@ -17,6 +17,7 @@
 */
 
 #include "belle_sip_resolver.h"
+#include "Xsocket.h"
 
 #include <stdlib.h>
 #ifdef __APPLE__
@@ -526,22 +527,25 @@ void belle_sip_resolve_cancel(belle_sip_main_loop_t *ml, unsigned long id){
 
 
 void belle_sip_get_src_addr_for(const struct sockaddr *dest, socklen_t destlen, struct sockaddr *src, socklen_t *srclen, int local_port){
-	int af_type=dest->sa_family;
-	int sock=socket(af_type,SOCK_DGRAM,IPPROTO_UDP);
+	// int af_type=dest->sa_family;
+	int af_type=AF_XIA;
+	// int sock=Xsocket(af_type,SOCK_DGRAM,IPPROTO_UDP);
+	int sock=Xsocket(af_type,SOCK_STREAM,IPPROTO_UDP);
+
 	
 	if (sock==(belle_sip_socket_t)-1){
 		belle_sip_fatal("Could not create socket: %s",belle_sip_get_socket_error_string());
 		goto fail;
 	}
-	if (connect(sock,dest,destlen)==-1){
+	if (Xconnect(sock,dest,destlen)==-1){
 		belle_sip_error("belle_sip_get_src_addr_for: connect() failed: %s",belle_sip_get_socket_error_string());
 		goto fail;
 	}
-	if (getsockname(sock,src,srclen)==-1){
+	if (Xgetsockname(sock,src,srclen)==-1){
 		belle_sip_error("belle_sip_get_src_addr_for: getsockname() failed: %s",belle_sip_get_socket_error_string());
 		goto fail;
 	}
-	
+	/*
 	if (af_type==AF_INET6){
 		struct sockaddr_in6 *sin6=(struct sockaddr_in6*)src;
 		sin6->sin6_port=htons(local_port);
@@ -549,7 +553,7 @@ void belle_sip_get_src_addr_for(const struct sockaddr *dest, socklen_t destlen, 
 		struct sockaddr_in *sin=(struct sockaddr_in*)src;
 		sin->sin_port=htons(local_port);
 	}
-	
+	*/
 	close_socket(sock);
 	return;
 fail:
@@ -557,11 +561,11 @@ fail:
 		struct addrinfo hints={0},*res=NULL;
 		int err;
 		hints.ai_family=af_type;
-		err=getaddrinfo(af_type==AF_INET ? "0.0.0.0" : "::0","0",&hints,&res);
+		err=Xgetaddrinfo(af_type==AF_INET ? "0.0.0.0" : "::0","0",&hints,&res);
 		if (err!=0) belle_sip_fatal("belle_sip_get_src_addr_for(): getaddrinfo failed: %s",belle_sip_get_socket_error_string_from_code(err));
 		memcpy(src,res->ai_addr,MIN((size_t)*srclen,res->ai_addrlen));
 		*srclen=res->ai_addrlen;
-		freeaddrinfo(res);
+		Xfreeaddrinfo(res);
 	}
 	if (sock!=(belle_sip_socket_t)-1) close_socket(sock);
 }
@@ -587,8 +591,8 @@ void belle_sip_address_remove_v4_mapping(const struct sockaddr *v6, struct socka
 		}
 		
 	}else{
-		*result_len=sizeof(struct sockaddr_in);
-		if (v6!=result) memcpy(result,v6,sizeof(struct sockaddr_in));
+		*result_len=sizeof(sockaddr_x);
+		if (v6!=result) memcpy(result,v6,sizeof(sockaddr_x));
 	}
 }
 

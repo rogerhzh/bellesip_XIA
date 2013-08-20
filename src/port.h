@@ -20,6 +20,7 @@
 #define belle_sip_port_h
 
 #include <sys/stat.h>
+#include "Xsocket.h"
 
 #ifndef WIN32
 #include <stdint.h>
@@ -132,7 +133,7 @@ typedef pthread_key_t belle_sip_thread_key_t;
 #define belle_sip_thread_key_delete(key)				pthread_key_delete(key)
 
 static BELLESIP_INLINE void close_socket(belle_sip_socket_t s){
-	close(s);
+	Xclose(s);
 }
 
 static BELLESIP_INLINE int get_socket_error(void){

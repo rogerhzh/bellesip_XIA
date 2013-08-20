@@ -18,6 +18,7 @@
 
 
 #include "belle_sip_internal.h"
+#include "Xsocket.h"
 
 static void channel_prepare_continue(belle_sip_channel_t *obj);
 static void channel_process_queue(belle_sip_channel_t *obj);
@@ -55,7 +56,7 @@ static belle_sip_list_t * for_each_weak_unref_free(belle_sip_list_t *l, belle_si
 }
 
 static void belle_sip_channel_destroy(belle_sip_channel_t *obj){
-	if (obj->peer_list) freeaddrinfo(obj->peer_list);
+	if (obj->peer_list) Xfreeaddrinfo(obj->peer_list);
 	if (obj->peer_cname) belle_sip_free(obj->peer_cname);
 	belle_sip_free(obj->peer_name);
 	if (obj->local_ip) belle_sip_free(obj->local_ip);

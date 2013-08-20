@@ -16,6 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "belle_sip_internal.h"
+#include "Xsocket.h"
 
 struct belle_sip_udp_listening_point{
 	belle_sip_listening_point_t base;
@@ -59,44 +60,45 @@ BELLE_SIP_INSTANCIATE_CUSTOM_VPTR(belle_sip_udp_listening_point_t)={
 
 
 static belle_sip_socket_t create_udp_socket(const char *addr, int port, int *family){
-	struct addrinfo hints={0};
+/*	struct addrinfo hints={0}; */
 	struct addrinfo *res=NULL;
 	int err;
 	belle_sip_socket_t sock;
 	char portnum[10];
-	int optval=1;
+/*	int optval=1; */
 
 	snprintf(portnum,sizeof(portnum),"%i",port);
-	hints.ai_family=AF_UNSPEC;
+/*	hints.ai_family=AF_UNSPEC;
 	hints.ai_socktype=SOCK_DGRAM;
 	hints.ai_protocol=IPPROTO_UDP;
-	hints.ai_flags=AI_NUMERICSERV;
-	err=getaddrinfo(addr,portnum,&hints,&res);
+	hints.ai_flags=AI_NUMERICSERV; */
+	err=Xgetaddrinfo(addr,NULL,NULL,&res);
 	if (err!=0){
 		belle_sip_error("getaddrinfo() failed for %s port %i: %s",addr,port,gai_strerror(err));
 		return -1;
 	}
 	*family=res->ai_family;
-	sock=socket(res->ai_family,res->ai_socktype,res->ai_protocol);
+/*	sock=Xsocket(res->ai_family,res->ai_socktype,res->ai_protocol); */
+	sock=Xsocket(AF_XIA, SOCK_DGRAM, 0);
 	if (sock==-1){
 		belle_sip_error("Cannot create UDP socket: %s",belle_sip_get_socket_error_string());
-		freeaddrinfo(res);
+		Xfreeaddrinfo(res);
 		return -1;
 	}
-	err = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR,
-			(char*)&optval, sizeof (optval));
+/*	err = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR,
+			(char*)&optval, sizeof (optval)); 
 	if (err == -1){
 		belle_sip_warning ("Fail to set SIP/UDP address reusable: %s.", belle_sip_get_socket_error_string());
-	}
+	} */
 	
-	err=bind(sock,res->ai_addr,res->ai_addrlen);
+	err=Xbind(sock,res->ai_addr,res->ai_addrlen);
 	if (err==-1){
 		belle_sip_error("udp bind() failed for %s port %i: %s",addr,port,belle_sip_get_socket_error_string());
 		close_socket(sock);
-		freeaddrinfo(res);
+		Xfreeaddrinfo(res);
 		return -1;
 	}
-	freeaddrinfo(res);
+	Xfreeaddrinfo(res);
 	return sock;
 }
 
@@ -104,7 +106,9 @@ static int on_udp_data(belle_sip_udp_listening_point_t *lp, unsigned int events)
 
 static int belle_sip_udp_listening_point_init_socket(belle_sip_udp_listening_point_t *lp){
 	lp->sock=create_udp_socket(belle_sip_uri_get_host(((belle_sip_listening_point_t*)lp)->listening_uri)
-					,belle_sip_uri_get_port(((belle_sip_listening_point_t*)lp)->listening_uri),&lp->base.ai_family);
+					,belle_sip_uri_get_port(((belle_sip_listening_point_t*)lp)->listening_uri),&lp->base.ai_family); 
+/*	lp->sock=create_udp_socket(belle_sip_uri_get_host(((belle_sip_listening_point_t*)lp)->listening_uri)
+					,0,AF_XIA);		*/
 	if (lp->sock==(belle_sip_socket_t)-1){
 		return -1;
 	}
@@ -125,12 +129,12 @@ static void belle_sip_udp_listening_point_init(belle_sip_udp_listening_point_t *
 static int on_udp_data(belle_sip_udp_listening_point_t *lp, unsigned int events){
 	int err;
 	unsigned char buf[4096];
-	struct sockaddr_storage addr;
-	socklen_t addrlen=sizeof(addr);
+	sockaddr_x addr;
+	socklen_t addrlen=sizeof(sockaddr_x);
 
 	if (events & BELLE_SIP_EVENT_READ){
 		belle_sip_debug("udp_listening_point: data to read.");
-		err=recvfrom(lp->sock,(char*)buf,sizeof(buf),MSG_PEEK,(struct sockaddr*)&addr,&addrlen);
+		err=Xrecvfrom(lp->sock,(char*)buf,sizeof(buf),MSG_PEEK,(struct sockaddr*)&addr,&addrlen);
 		if (err==-1){
 			char *tmp=belle_sip_object_to_string((belle_sip_object_t*) ((belle_sip_listening_point_t*)lp)->listening_uri);
 			belle_sip_error("udp_listening_point: recvfrom() failed on [%s], : [%s] reopening server socket"
@@ -145,7 +149,7 @@ static int on_udp_data(belle_sip_udp_listening_point_t *lp, unsigned int events)
 			belle_sip_channel_t *chan;
 			struct addrinfo ai={0};
 			belle_sip_address_remove_v4_mapping((struct sockaddr*)&addr,(struct sockaddr*)&addr,&addrlen);
-			ai.ai_family=addr.ss_family;
+			ai.ai_family=((struct sockaddr*)&addr)->sa_family;
 			ai.ai_addr=(struct sockaddr*)&addr;
 			ai.ai_addrlen=addrlen;
 			chan=_belle_sip_listening_point_get_channel((belle_sip_listening_point_t*)lp,NULL,&ai);

@@ -19,6 +19,7 @@
 
 #include "belle_sip_internal.h"
 #include "channel.h"
+#include "Xsocket.h"
 
 BELLE_SIP_DECLARE_CUSTOM_VPTR_BEGIN(belle_sip_udp_channel_t,belle_sip_channel_t)
 BELLE_SIP_DECLARE_CUSTOM_VPTR_END
@@ -37,7 +38,7 @@ static void udp_channel_uninit(belle_sip_udp_channel_t *obj){
 static int udp_channel_send(belle_sip_channel_t *obj, const void *buf, size_t buflen){
 	belle_sip_udp_channel_t *chan=(belle_sip_udp_channel_t *)obj;
 	int err;
-	err=sendto(chan->sock,buf,buflen,0,obj->current_peer->ai_addr,obj->current_peer->ai_addrlen);
+	err=Xsendto(chan->sock,buf,buflen,0,obj->current_peer->ai_addr,obj->current_peer->ai_addrlen);
 	if (err==-1){
 		belle_sip_error("channel [%p]: could not send UDP packet because [%s]",obj,belle_sip_get_socket_error_string());
 		return -errno;
@@ -48,9 +49,9 @@ static int udp_channel_send(belle_sip_channel_t *obj, const void *buf, size_t bu
 static int udp_channel_recv(belle_sip_channel_t *obj, void *buf, size_t buflen){
 	belle_sip_udp_channel_t *chan=(belle_sip_udp_channel_t *)obj;
 	int err;
-	struct sockaddr_storage addr;
-	socklen_t addrlen=sizeof(addr);
-	err=recvfrom(chan->sock,buf,buflen,0,(struct sockaddr*)&addr,&addrlen);
+	sockaddr_x addr;
+	socklen_t addrlen=sizeof(sockaddr_x);
+	err=Xrecvfrom(chan->sock,buf,buflen,0,(struct sockaddr*)&addr,&addrlen);
 
 	if (err==-1 && get_socket_error()!=BELLESIP_EWOULDBLOCK){
 		belle_sip_error("Could not receive UDP packet: %s",belle_sip_get_socket_error_string());
@@ -60,11 +61,11 @@ static int udp_channel_recv(belle_sip_channel_t *obj, void *buf, size_t buflen){
 }
 
 int udp_channel_connect(belle_sip_channel_t *obj, const struct addrinfo *ai){
-	struct sockaddr_storage laddr;
-	socklen_t lslen=sizeof(laddr);
+	sockaddr_x laddr;
+	socklen_t lslen=sizeof(sockaddr_x);
 	if (obj->local_ip==NULL){
-		belle_sip_get_src_addr_for(ai->ai_addr,ai->ai_addrlen,(struct sockaddr*)&laddr,&lslen,obj->local_port);
-		belle_sip_address_remove_v4_mapping((struct sockaddr*)&laddr,(struct sockaddr*)&laddr,&lslen);
+		belle_sip_get_src_addr_for(ai->ai_addr,ai->ai_addrlen,(struct sockaddr*)&laddr,&lslen,0);
+//		belle_sip_address_remove_v4_mapping((struct sockaddr*)&laddr,(struct sockaddr*)&laddr,&lslen);
 	}
 	belle_sip_channel_set_ready(obj,(struct sockaddr*)&laddr,lslen);
 	return 0;
@@ -105,7 +106,7 @@ belle_sip_channel_t * belle_sip_channel_new_udp_with_addr(belle_sip_stack_t *sta
 
 	obj->sock=sock;
 	ai=*peer;
-	err=getnameinfo(ai.ai_addr,ai.ai_addrlen,name,sizeof(name),serv,sizeof(serv),NI_NUMERICHOST|NI_NUMERICSERV);
+	err=Xgetnameinfo(ai.ai_addr,ai.ai_addrlen,name,sizeof(name),serv,sizeof(serv),NI_NUMERICHOST|NI_NUMERICSERV);
 	if (err!=0){
 		belle_sip_error("belle_sip_channel_new_udp_with_addr(): getnameinfo() failed: %s",gai_strerror(err));
 		belle_sip_object_unref(obj);
@@ -113,7 +114,8 @@ belle_sip_channel_t * belle_sip_channel_new_udp_with_addr(belle_sip_stack_t *sta
 	}
 	belle_sip_channel_init((belle_sip_channel_t*)obj,stack,bindip,localport,NULL,name,atoi(serv));
 	hints.ai_family=peer->ai_family;
-	err=getaddrinfo(name,serv,&hints,&obj->base.current_peer); /*might be optimized someway ?*/
+	hints.ai_flags=XAI_DAGHOST;
+	err=Xgetaddrinfo(name,serv,&hints,&obj->base.current_peer); /*might be optimized someway ?*/
 	if (err!=0){
 		belle_sip_error("getaddrinfo() failed for udp channel [%p] error [%s]",obj,gai_strerror(err));
 	}

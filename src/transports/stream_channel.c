@@ -19,13 +19,16 @@
 #include "belle_sip_internal.h"
 #include "belle-sip/mainloop.h"
 #include "stream_channel.h"
+#include "Xsocket.h"
 
 static void set_tcp_nodelay(belle_sip_socket_t sock){
+/*
 	int tmp=1;
 	int err=setsockopt(sock, IPPROTO_TCP, TCP_NODELAY,(char*)&tmp,sizeof(tmp));
 	if (err == -1){
 		belle_sip_warning ("Fail to set TCP_NODELAY: %s.", belle_sip_get_socket_error_string());
-	}
+	} */
+	return;
 }
 
 /*************TCP********/
@@ -41,7 +44,7 @@ static void stream_channel_uninit(belle_sip_stream_channel_t *obj){
 int stream_channel_send(belle_sip_stream_channel_t *obj, const void *buf, size_t buflen){
 	belle_sip_socket_t sock = belle_sip_source_get_socket((belle_sip_source_t*)obj);
 	int err;
-	err=send(sock,buf,buflen,0);
+	err=Xsend(sock,buf,buflen,0);
 	if (err==(belle_sip_socket_t)-1){
 		int errnum=get_socket_error();
 		if (!belle_sip_error_code_is_would_block(errnum)){
@@ -57,7 +60,7 @@ int stream_channel_send(belle_sip_stream_channel_t *obj, const void *buf, size_t
 int stream_channel_recv(belle_sip_stream_channel_t *obj, void *buf, size_t buflen){
 	belle_sip_socket_t sock = belle_sip_source_get_socket((belle_sip_source_t*)obj);
 	int err;
-	err=recv(sock,buf,buflen,0);
+	err=Xrecv(sock,buf,buflen,0);
 	if (err==(belle_sip_socket_t)-1){
 		int errnum=get_socket_error();
 		if (!belle_sip_error_code_is_would_block(errnum)){
@@ -116,24 +119,24 @@ static void stream_channel_enable_ios_background_mode(belle_sip_stream_channel_t
 
 int stream_channel_connect(belle_sip_stream_channel_t *obj, const struct addrinfo *ai){
 	int err;
-	int tmp;
+/*	int tmp; */
 	belle_sip_socket_t sock;
-	tmp=1;
+/*	tmp=1; */
 	
-	sock=socket(ai->ai_family, SOCK_STREAM, IPPROTO_TCP);
+	sock=Xsocket(AF_XIA, SOCK_STREAM, 0);
 	
 	if (sock==(belle_sip_socket_t)-1){
 		belle_sip_error("Could not create socket: %s",belle_sip_get_socket_error_string());
 		return -1;
 	}
 	
-	err=setsockopt(sock, IPPROTO_TCP, TCP_NODELAY,(char*)&tmp,sizeof(tmp));
+/*	err=setsockopt(sock, IPPROTO_TCP, TCP_NODELAY,(char*)&tmp,sizeof(tmp)); 
 	if (err!=0){
 		belle_sip_error("setsockopt TCP_NODELAY failed: [%s]",belle_sip_get_socket_error_string());
-	}
-	belle_sip_socket_set_nonblocking(sock);
+	} */
+/*	belle_sip_socket_set_nonblocking(sock); */
 	
-	err = connect(sock,ai->ai_addr,ai->ai_addrlen);
+	err = Xconnect(sock,ai->ai_addr,ai->ai_addrlen);
 	if (err != 0 && get_socket_error()!=BELLESIP_EINPROGRESS && get_socket_error()!=BELLESIP_EWOULDBLOCK) {
 		belle_sip_error("stream connect failed %s",belle_sip_get_socket_error_string());
 		close_socket(sock);
@@ -166,18 +169,18 @@ BELLE_SIP_INSTANCIATE_CUSTOM_VPTR(belle_sip_stream_channel_t)=
 };
 
 int finalize_stream_connection(belle_sip_stream_channel_t *obj, struct sockaddr *addr, socklen_t* slen) {
-	int err, errnum;
-	socklen_t optlen=sizeof(errnum);
+	int err; /*, errnum; */
+/*	socklen_t optlen=sizeof(errnum); */
 	belle_sip_socket_t sock=belle_sip_source_get_socket((belle_sip_source_t*)obj);
 	
-	err=getsockopt(sock,SOL_SOCKET,SO_ERROR,(void*)&errnum,&optlen);
+	/*err=getsockopt(sock,SOL_SOCKET,SO_ERROR,(void*)&errnum,&optlen);
 	if (err!=0){
 		belle_sip_error("Failed to retrieve connection status for fd [%i]: cause [%s]",sock,belle_sip_get_socket_error_string());
 		return -1;
-	}else{
-		if (errnum==0){
+	}else{*/
+/*		if (errnum==0){ */
 			/*obtain bind address for client*/
-			err=getsockname(sock,addr,slen);
+			err=Xgetsockname(sock,addr,slen);
 			if (err<0){
 				belle_sip_error("Failed to retrieve sockname  for fd [%i]: cause [%s]",sock,belle_sip_get_socket_error_string());
 				return -1;
@@ -190,16 +193,16 @@ int finalize_stream_connection(belle_sip_stream_channel_t *obj, struct sockaddr 
 				belle_sip_socket_set_dscp(sock,obj->base.lp->ai_family,obj->base.stack->dscp);
 			set_tcp_nodelay(sock);
 			return 0;
-		}else{
+		/*}else{
 			belle_sip_error("Connection failed  for fd [%i]: cause [%s]",sock,belle_sip_get_socket_error_string_from_code(errnum));
 			return -1;
-		}
-	}
+		}*/
+/*	} */
 }
 
 static int stream_channel_process_data(belle_sip_stream_channel_t *obj,unsigned int revents){
-	struct sockaddr_storage ss;
-	socklen_t addrlen=sizeof(ss);
+	sockaddr_x ss;
+	socklen_t addrlen=sizeof(sockaddr_x);
 	belle_sip_channel_state_t state=belle_sip_channel_get_state((belle_sip_channel_t*)obj);
 	belle_sip_channel_t *base=(belle_sip_channel_t*)obj;
 
@@ -237,21 +240,20 @@ belle_sip_channel_t * belle_sip_stream_channel_new_client(belle_sip_stack_t *sta
 }
 
 belle_sip_channel_t * belle_sip_stream_channel_new_child(belle_sip_stack_t *stack, belle_sip_socket_t sock, struct sockaddr *remote_addr, socklen_t slen){
-	struct sockaddr_storage localaddr;
-	socklen_t local_len=sizeof(localaddr);
+	sockaddr_x localaddr;
+	socklen_t local_len=sizeof(sockaddr_x);
 	belle_sip_stream_channel_t *obj;
-	int err;
-	int optval=1;
-	
+/*	int err;
+	int optval=1; 
 	err = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR,
 			(char*)&optval, sizeof (optval));
 	if (err == -1){
 		belle_sip_warning ("Fail to set SIP/TCP address reusable: %s.", belle_sip_get_socket_error_string());
-	}
+	} */
 	
 	set_tcp_nodelay(sock);
 	
-	if (getsockname(sock,(struct sockaddr*)&localaddr,&local_len)==-1){
+	if (Xgetsockname(sock,(struct sockaddr*)&localaddr,&local_len)==-1){
 		belle_sip_error("getsockname() failed: %s",belle_sip_get_socket_error_string());
 		return NULL;
 	}
@@ -260,7 +262,7 @@ belle_sip_channel_t * belle_sip_stream_channel_new_child(belle_sip_stack_t *stac
 	
 	obj=belle_sip_object_new(belle_sip_stream_channel_t);
 	belle_sip_channel_init_with_addr((belle_sip_channel_t*)obj,stack,remote_addr,slen);
-	belle_sip_socket_set_nonblocking(sock);
+/*	belle_sip_socket_set_nonblocking(sock); */
 	belle_sip_channel_set_socket((belle_sip_channel_t*)obj,sock,(belle_sip_source_func_t)stream_channel_process_data);
 	belle_sip_source_set_events((belle_sip_source_t*)obj,BELLE_SIP_EVENT_READ|BELLE_SIP_EVENT_ERROR);
 	belle_sip_channel_set_ready((belle_sip_channel_t*)obj,(struct sockaddr*)&localaddr,local_len);

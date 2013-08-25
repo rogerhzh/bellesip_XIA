@@ -16,6 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "belle_sip_internal.h"
+#include "Xsocket.h"
 
 static int on_new_connection(void *userdata, unsigned int events);
 
@@ -59,51 +60,51 @@ BELLE_SIP_INSTANCIATE_CUSTOM_VPTR(belle_sip_stream_listening_point_t)={
 };
 
 static belle_sip_socket_t create_server_socket(const char *addr, int port, int *family){
-	struct addrinfo hints={0};
+/*	struct addrinfo hints={0}; */
 	struct addrinfo *res=NULL;
 	int err;
 	belle_sip_socket_t sock;
-	char portnum[10];
-	int optval=1;
-
+/*	char portnum[10];
+	int optval=1; */
+/*
 	snprintf(portnum,sizeof(portnum),"%i",port);
 	hints.ai_family=AF_UNSPEC;
 	hints.ai_socktype=SOCK_STREAM;
 	hints.ai_protocol=IPPROTO_TCP;
-	hints.ai_flags=AI_NUMERICSERV;
-	err=getaddrinfo(addr,portnum,&hints,&res);
+	hints.ai_flags=AI_NUMERICSERV; */
+	err=Xgetaddrinfo(addr,NULL,NULL,&res);
 	if (err!=0){
 		belle_sip_error("getaddrinfo() failed for %s port %i: %s",addr,port,gai_strerror(err));
 		return -1;
 	}
 	*family=res->ai_family;
-	sock=socket(res->ai_family,res->ai_socktype,res->ai_protocol);
+	sock=Xsocket(AF_XIA,SOCK_STREAM,res->ai_protocol);
 	if (sock==-1){
 		belle_sip_error("Cannot create UDP socket: %s",belle_sip_get_socket_error_string());
-		freeaddrinfo(res);
+		Xfreeaddrinfo(res);
 		return -1;
 	}
-	err = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR,
+/*	err = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR,
 			(char*)&optval, sizeof (optval));
 	if (err == -1){
 		belle_sip_warning ("Fail to set SIP/TCP address reusable: %s.", belle_sip_get_socket_error_string());
 	}
-	
-	err=bind(sock,res->ai_addr,res->ai_addrlen);
+	*/
+	err=Xbind(sock,res->ai_addr,res->ai_addrlen);
 	if (err==-1){
 		belle_sip_error("TCP bind() failed for %s port %i: %s",addr,port,belle_sip_get_socket_error_string());
 		close_socket(sock);
-		freeaddrinfo(res);
+		Xfreeaddrinfo(res);
 		return -1;
 	}
-	freeaddrinfo(res);
+	Xfreeaddrinfo(res);
 	
-	err=listen(sock,64);
+/*	err=listen(sock,64);
 	if (err==-1){
 		belle_sip_error("TCP listen() failed for %s port %i: %s",addr,port,belle_sip_get_socket_error_string());
 		close_socket(sock);
 		return -1;
-	}
+	} */
 	return sock;
 }
 
@@ -119,12 +120,12 @@ void belle_sip_stream_listening_point_setup_server_socket(belle_sip_stream_liste
 
 static int on_new_connection(void *userdata, unsigned int events){
 	belle_sip_socket_t child;
-	struct sockaddr_storage addr;
-	socklen_t slen=sizeof(addr);
+	sockaddr_x addr;
+	socklen_t slen=sizeof(sockaddr_x);
 	belle_sip_stream_listening_point_t *lp=(belle_sip_stream_listening_point_t*)userdata;
 	belle_sip_channel_t *chan;
 	
-	child=accept(lp->server_sock,(struct sockaddr*)&addr,&slen);
+	child=Xaccept(lp->server_sock,(struct sockaddr*)&addr,&slen);
 	if (child==(belle_sip_socket_t)-1){
 		belle_sip_error("Listening point [%p] accept() failed on TCP server socket: %s",lp,belle_sip_get_socket_error_string());
 		belle_sip_stream_listening_point_destroy_server_socket(lp);

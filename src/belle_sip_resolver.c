@@ -317,7 +317,8 @@ static int resolver_start_query(belle_sip_resolver_context_t *ctx) {
 
 int belle_sip_addrinfo_to_ip(const struct addrinfo *ai, char *ip, size_t ip_size, int *port){
 	char serv[16];
-	int err=getnameinfo(ai->ai_addr,ai->ai_addrlen,ip,ip_size,serv,sizeof(serv),NI_NUMERICHOST|NI_NUMERICSERV);
+/*	int err=getnameinfo(ai->ai_addr,ai->ai_addrlen,ip,ip_size,serv,sizeof(serv),NI_NUMERICHOST|NI_NUMERICSERV); */
+	int err=Xgetnameinfo(ai->ai_addr,ai->ai_addrlen,ip,ip_size,serv,sizeof(serv),NI_NUMERICHOST|NI_NUMERICSERV);
 	if (err!=0){
 		belle_sip_error("getnameinfo() error: %s",gai_strerror(err));
 		strncpy(ip,"<bug!!>",ip_size);
@@ -334,12 +335,12 @@ struct addrinfo * belle_sip_ip_address_to_addrinfo(int family, const char *ipadd
 
 	snprintf(serv,sizeof(serv),"%i",port);
 	hints.ai_family=family;
-	hints.ai_flags=AI_NUMERICSERV|AI_NUMERICHOST;
+	hints.ai_flags=XAI_DAGHOST;
 	hints.ai_socktype=SOCK_STREAM; //not used but it's needed to specify it because otherwise getaddrinfo returns one struct addrinfo per socktype.
 	
 	if (family==AF_INET6) hints.ai_flags|=AI_V4MAPPED;
 	
-	err=getaddrinfo(ipaddress,serv,&hints,&res);
+	err=Xgetaddrinfo(ipaddress,serv,&hints,&res);
 	if (err!=0){
 		return NULL;
 	}

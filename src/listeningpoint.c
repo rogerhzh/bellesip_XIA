@@ -137,9 +137,9 @@ belle_sip_channel_t *belle_sip_listening_point_get_channel(belle_sip_listening_p
 	char portstr[20];
 	belle_sip_channel_t *chan;
 
-	hints.ai_flags=AI_NUMERICHOST|AI_NUMERICSERV;
+	hints.ai_flags=XAI_DAGHOST;;
 	snprintf(portstr,sizeof(portstr),"%i",hop->port);
-	getaddrinfo(hop->host,portstr,&hints,&res);
+	Xgetaddrinfo(hop->host,portstr,&hints,&res);
 	chan=_belle_sip_listening_point_get_channel(lp,hop,res);
 	if (res) freeaddrinfo(res);
 	return chan;

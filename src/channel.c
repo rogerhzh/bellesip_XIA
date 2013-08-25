@@ -90,7 +90,7 @@ static void fix_incoming_via(belle_sip_request_t *msg, const struct addrinfo* or
 		belle_sip_warning("cannot fix via for message [%p], probably a test",msg);
 		return;
 	}
-	err=getnameinfo(origin->ai_addr,origin->ai_addrlen,received,sizeof(received),
+	err=Xgetnameinfo(origin->ai_addr,origin->ai_addrlen,received,sizeof(received),
 	                rport,sizeof(rport),NI_NUMERICHOST|NI_NUMERICSERV);
 	if (err!=0){
 		belle_sip_error("fix_via: getnameinfo() failed: %s",gai_strerror(errno));
@@ -633,12 +633,12 @@ void belle_sip_channel_set_ready(belle_sip_channel_t *obj, const struct sockaddr
 	char serv[NI_MAXSERV];
 
 	if (obj->local_ip==NULL){
-		int err=getnameinfo(addr,slen,name,sizeof(name),serv,sizeof(serv),NI_NUMERICHOST|NI_NUMERICSERV);
+		int err=Xgetnameinfo(addr,slen,name,sizeof(name),serv,sizeof(serv),NI_NUMERICHOST|NI_NUMERICSERV);
 		if (err!=0){
 			belle_sip_error("belle_sip_channel_set_ready(): getnameinfo() failed: %s",gai_strerror(err));
 		}else{
 			obj->local_ip=belle_sip_strdup(name);
-			obj->local_port=atoi(serv);
+			obj->local_port=5060;
 			belle_sip_message("Channel has local address %s:%s",name,serv);
 		}
 	}

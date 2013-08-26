@@ -113,7 +113,7 @@ belle_sip_channel_t * belle_sip_channel_new_udp_with_addr(belle_sip_stack_t *sta
 		return NULL;
 	}
 	belle_sip_channel_init((belle_sip_channel_t*)obj,stack,bindip,localport,NULL,name,atoi(serv));
-	hints.ai_family=peer->ai_family;
+	hints.ai_family=AF_XIA;
 	hints.ai_flags=XAI_DAGHOST;
 	err=Xgetaddrinfo(name,serv,&hints,&obj->base.current_peer); /*might be optimized someway ?*/
 	if (err!=0){

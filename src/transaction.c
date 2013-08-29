@@ -309,7 +309,6 @@ int belle_sip_client_transaction_send_request_to(belle_sip_client_transaction_t 
 	belle_sip_channel_t *chan;
 	belle_sip_provider_t *prov=t->base.provider;
 	int result=-1;
-	
 	if (t->base.state!=BELLE_SIP_TRANSACTION_INIT){
 		belle_sip_error("belle_sip_client_transaction_send_request: bad state.");
 		return -1;
@@ -348,7 +347,6 @@ int belle_sip_client_transaction_send_request_to(belle_sip_client_transaction_t 
 		belle_sip_transaction_terminate(BELLE_SIP_TRANSACTION(t));
 		result=-1;
 	}
-
 	return result;
 }
 

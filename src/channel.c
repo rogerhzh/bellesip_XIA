@@ -635,11 +635,11 @@ void belle_sip_channel_set_ready(belle_sip_channel_t *obj, const struct sockaddr
 	if (obj->local_ip==NULL){
 		int err=Xgetnameinfo(addr,slen,name,sizeof(name),serv,sizeof(serv),NI_NUMERICHOST|NI_NUMERICSERV);
 		if (err!=0){
-			belle_sip_error("belle_sip_channel_set_ready(): getnameinfo() failed: %s",gai_strerror(err));
+			printf("belle_sip_channel_set_ready(): getnameinfo() failed: %s",gai_strerror(err));
 		}else{
 			obj->local_ip=belle_sip_strdup(name);
 			obj->local_port=5060;
-			belle_sip_message("Channel has local address %s:%s",name,serv);
+			printf("Channel has local address %s:%s",name,serv);
 		}
 	}
 	channel_set_state(obj,BELLE_SIP_CHANNEL_READY);

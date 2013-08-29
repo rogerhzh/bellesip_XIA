@@ -135,7 +135,6 @@ static int on_udp_data(belle_sip_udp_listening_point_t *lp, unsigned int events)
 	if (events & BELLE_SIP_EVENT_READ){
 		belle_sip_debug("udp_listening_point: data to read.");
 		err=Xrecvfrom(lp->sock,(char*)buf,sizeof(buf),MSG_PEEK,(struct sockaddr*)&addr,&addrlen);
-		printf("peek:\n%s\n", buf);
 		if (err==-1){
 			char *tmp=belle_sip_object_to_string((belle_sip_object_t*) ((belle_sip_listening_point_t*)lp)->listening_uri);
 			belle_sip_error("udp_listening_point: recvfrom() failed on [%s], : [%s] reopening server socket"

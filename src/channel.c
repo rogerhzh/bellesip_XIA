@@ -668,11 +668,11 @@ void belle_sip_channel_resolve(belle_sip_channel_t *obj){
 }
 
 void belle_sip_channel_connect(belle_sip_channel_t *obj){
-	char ip[64];
+	char ip[128];
 	
 	channel_set_state(obj,BELLE_SIP_CHANNEL_CONNECTING);
 	belle_sip_addrinfo_to_ip(obj->current_peer,ip,sizeof(ip),NULL);
-	belle_sip_message("Trying to connect to [%s://%s:%i]",belle_sip_channel_get_transport_name(obj),ip,obj->peer_port);
+	printf("Trying to connect to [%s://%s]",belle_sip_channel_get_transport_name(obj),ip);
 	
 	if(BELLE_SIP_OBJECT_VPTR(obj,belle_sip_channel_t)->connect(obj,obj->current_peer)) {
 		belle_sip_error("Cannot connect to [%s://%s:%i]",belle_sip_channel_get_transport_name(obj),obj->peer_name,obj->peer_port);

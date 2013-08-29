@@ -316,14 +316,15 @@ static int resolver_start_query(belle_sip_resolver_context_t *ctx) {
 
 
 int belle_sip_addrinfo_to_ip(const struct addrinfo *ai, char *ip, size_t ip_size, int *port){
-	char serv[16];
-/*	int err=getnameinfo(ai->ai_addr,ai->ai_addrlen,ip,ip_size,serv,sizeof(serv),NI_NUMERICHOST|NI_NUMERICSERV); */
-	int err=Xgetnameinfo(ai->ai_addr,ai->ai_addrlen,ip,ip_size,serv,sizeof(serv),NI_NUMERICHOST|NI_NUMERICSERV);
+/*	char serv[16];
+	int err=getnameinfo(ai->ai_addr,ai->ai_addrlen,ip,ip_size,serv,sizeof(serv),NI_NUMERICHOST|NI_NUMERICSERV); */
+	int err=Xgetnameinfo(ai->ai_addr,ai->ai_addrlen,ip,ip_size,NULL,0,0);
 	if (err!=0){
 		belle_sip_error("getnameinfo() error: %s",gai_strerror(err));
 		strncpy(ip,"<bug!!>",ip_size);
 	}
-	if (port) *port=atoi(serv);
+/*	if (port) *port=atoi(serv); */
+	if (port) *port=0;
 	return 0;
 }
 

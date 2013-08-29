@@ -52,7 +52,6 @@ static int udp_channel_recv(belle_sip_channel_t *obj, void *buf, size_t buflen){
 	sockaddr_x addr;
 	socklen_t addrlen=sizeof(sockaddr_x);
 	err=Xrecvfrom(chan->sock,buf,buflen,0,(struct sockaddr*)&addr,&addrlen);
-	printf("buf:\n%s\n", (char *)buf);
 	if (err==-1 && get_socket_error()!=BELLESIP_EWOULDBLOCK){
 		belle_sip_error("Could not receive UDP packet: %s",belle_sip_get_socket_error_string());
 		return -errno;

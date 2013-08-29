@@ -334,7 +334,7 @@ int belle_sip_client_transaction_send_request_to(belle_sip_client_transaction_t 
 		belle_sip_channel_add_listener(chan,BELLE_SIP_CHANNEL_LISTENER(t));
 		t->base.channel=chan;
 		if (belle_sip_channel_get_state(chan)==BELLE_SIP_CHANNEL_INIT){
-			belle_sip_message("belle_sip_client_transaction_send_request(): waiting channel to be ready");
+			printf("belle_sip_client_transaction_send_request(): waiting channel to be ready\n");
 			belle_sip_channel_prepare(chan);
 			/*the channel will notify us when it is ready*/
 		} else if (belle_sip_channel_get_state(chan)==BELLE_SIP_CHANNEL_READY){
@@ -343,7 +343,7 @@ int belle_sip_client_transaction_send_request_to(belle_sip_client_transaction_t 
 		}
 		result=0;
 	}else {
-		belle_sip_error("belle_sip_client_transaction_send_request(): no channel available");
+		printf("belle_sip_client_transaction_send_request(): no channel available\n");
 		belle_sip_transaction_terminate(BELLE_SIP_TRANSACTION(t));
 		result=-1;
 	}

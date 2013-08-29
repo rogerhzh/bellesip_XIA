@@ -481,7 +481,6 @@ belle_sip_channel_t * belle_sip_provider_get_channel(belle_sip_provider_t *p, co
 	belle_sip_listening_point_t *candidate=NULL,*lp;
 	belle_sip_channel_t *chan;
 	const char *transport=hop->transport;
-
 	if (transport==NULL) transport="UDP";
 	
 	for(l=p->lps;l!=NULL;l=l->next){
@@ -494,10 +493,10 @@ belle_sip_channel_t * belle_sip_provider_get_channel(belle_sip_provider_t *p, co
 	}
 	if (candidate){
 		chan=belle_sip_listening_point_create_channel(candidate,hop);
-		if (!chan) belle_sip_error("Could not create channel to %s://%s:%i",transport,hop->host,hop->port);
+		if (!chan) printf("Could not create channel to %s://%s:%i",transport,hop->host,hop->port);
 		return chan;
 	}
-	belle_sip_error("No listening point matching for transport %s",transport);
+	printf("No listening point matching for transport %s",transport);
 	return NULL;
 }
 

@@ -52,7 +52,7 @@ static int udp_channel_recv(belle_sip_channel_t *obj, void *buf, size_t buflen){
 	sockaddr_x addr;
 	socklen_t addrlen=sizeof(sockaddr_x);
 	err=Xrecvfrom(chan->sock,buf,buflen,0,(struct sockaddr*)&addr,&addrlen);
-
+	printf("buf:\n%s\n", (char *)buf);
 	if (err==-1 && get_socket_error()!=BELLESIP_EWOULDBLOCK){
 		belle_sip_error("Could not receive UDP packet: %s",belle_sip_get_socket_error_string());
 		return -errno;
@@ -99,7 +99,7 @@ belle_sip_channel_t * belle_sip_channel_new_udp(belle_sip_stack_t *stack, int so
 
 belle_sip_channel_t * belle_sip_channel_new_udp_with_addr(belle_sip_stack_t *stack, int sock, const char *bindip, int localport, const struct addrinfo *peer){
 	belle_sip_udp_channel_t *obj=belle_sip_object_new(belle_sip_udp_channel_t);
-	struct addrinfo ai,hints={0};
+	struct addrinfo ai;
 	char name[NI_MAXHOST];
 	char serv[NI_MAXSERV];
 	int err;
@@ -113,9 +113,9 @@ belle_sip_channel_t * belle_sip_channel_new_udp_with_addr(belle_sip_stack_t *sta
 		return NULL;
 	}
 	belle_sip_channel_init((belle_sip_channel_t*)obj,stack,bindip,localport,NULL,name,atoi(serv));
-	hints.ai_family=AF_XIA;
-	hints.ai_flags=XAI_DAGHOST;
-	err=Xgetaddrinfo(name,serv,&hints,&obj->base.current_peer); /*might be optimized someway ?*/
+/*	hints.ai_family=AF_XIA;
+	hints.ai_flags=XAI_DAGHOST; */
+	err=Xgetaddrinfo(name,NULL,NULL,&obj->base.current_peer); /*might be optimized someway ?*/
 	if (err!=0){
 		belle_sip_error("getaddrinfo() failed for udp channel [%p] error [%s]",obj,gai_strerror(err));
 	}

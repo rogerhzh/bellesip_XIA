@@ -329,18 +329,18 @@ int belle_sip_addrinfo_to_ip(const struct addrinfo *ai, char *ip, size_t ip_size
 
 struct addrinfo * belle_sip_ip_address_to_addrinfo(int family, const char *ipaddress, int port){
 	struct addrinfo *res=NULL;
-	struct addrinfo hints={0};
-	char serv[10];
+/*	struct addrinfo hints={0};
+	char serv[10]; */
 	int err;
 
-	snprintf(serv,sizeof(serv),"%i",port);
+/*	snprintf(serv,sizeof(serv),"%i",port);
 	hints.ai_family=family;
 	hints.ai_flags=XAI_DAGHOST;
-	hints.ai_socktype=SOCK_STREAM; //not used but it's needed to specify it because otherwise getaddrinfo returns one struct addrinfo per socktype.
+	hints.ai_socktype=SOCK_STREAM;
 	
 	if (family==AF_INET6) hints.ai_flags|=AI_V4MAPPED;
-	
-	err=Xgetaddrinfo(ipaddress,serv,&hints,&res);
+*/
+	err=Xgetaddrinfo(ipaddress,NULL,NULL,&res);
 	if (err!=0){
 		return NULL;
 	}

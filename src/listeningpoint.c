@@ -133,15 +133,15 @@ belle_sip_channel_t *_belle_sip_listening_point_get_channel(belle_sip_listening_
 
 belle_sip_channel_t *belle_sip_listening_point_get_channel(belle_sip_listening_point_t *lp,const belle_sip_hop_t *hop){
 	struct addrinfo *res=NULL;
-	struct addrinfo hints={0};
-	char portstr[20];
+/*	struct addrinfo hints={0}; */
+/*	char portstr[20]; */
 	belle_sip_channel_t *chan;
 
-	hints.ai_flags=XAI_DAGHOST;;
-	snprintf(portstr,sizeof(portstr),"%i",hop->port);
-	Xgetaddrinfo(hop->host,portstr,&hints,&res);
+/*	hints.ai_flags=XAI_DAGHOST;; 
+	snprintf(portstr,sizeof(portstr),"%i",hop->port); */
+	Xgetaddrinfo(hop->host,NULL,NULL,&res);
 	chan=_belle_sip_listening_point_get_channel(lp,hop,res);
-	if (res) freeaddrinfo(res);
+	if (res) Xfreeaddrinfo(res);
 	return chan;
 }
 

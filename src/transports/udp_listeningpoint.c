@@ -74,14 +74,14 @@ static belle_sip_socket_t create_udp_socket(const char *addr, int port, int *fam
 	hints.ai_flags=AI_NUMERICSERV; */
 	err=Xgetaddrinfo(addr,NULL,NULL,&res);
 	if (err!=0){
-		belle_sip_error("getaddrinfo() failed for %s port %i: %s",addr,port,gai_strerror(err));
+		printf("getaddrinfo() failed for %s port %i: %s",addr,port,gai_strerror(err));
 		return -1;
 	}
 	*family=res->ai_family;
 /*	sock=Xsocket(res->ai_family,res->ai_socktype,res->ai_protocol); */
 	sock=Xsocket(AF_XIA, SOCK_DGRAM, 0);
 	if (sock==-1){
-		belle_sip_error("Cannot create UDP socket: %s",belle_sip_get_socket_error_string());
+		printf("Cannot create UDP socket: %s",belle_sip_get_socket_error_string());
 		Xfreeaddrinfo(res);
 		return -1;
 	}
@@ -93,7 +93,7 @@ static belle_sip_socket_t create_udp_socket(const char *addr, int port, int *fam
 	
 	err=Xbind(sock,res->ai_addr,res->ai_addrlen);
 	if (err==-1){
-		belle_sip_error("udp bind() failed for %s port %i: %s",addr,port,belle_sip_get_socket_error_string());
+		printf("udp bind() failed for %s port %i: %s",addr,port,belle_sip_get_socket_error_string());
 		close_socket(sock);
 		Xfreeaddrinfo(res);
 		return -1;
@@ -135,6 +135,7 @@ static int on_udp_data(belle_sip_udp_listening_point_t *lp, unsigned int events)
 	if (events & BELLE_SIP_EVENT_READ){
 		belle_sip_debug("udp_listening_point: data to read.");
 		err=Xrecvfrom(lp->sock,(char*)buf,sizeof(buf),MSG_PEEK,(struct sockaddr*)&addr,&addrlen);
+		printf("peek:\n%s\n", buf);
 		if (err==-1){
 			char *tmp=belle_sip_object_to_string((belle_sip_object_t*) ((belle_sip_listening_point_t*)lp)->listening_uri);
 			belle_sip_error("udp_listening_point: recvfrom() failed on [%s], : [%s] reopening server socket"

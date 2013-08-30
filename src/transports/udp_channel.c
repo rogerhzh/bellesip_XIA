@@ -38,6 +38,7 @@ static void udp_channel_uninit(belle_sip_udp_channel_t *obj){
 static int udp_channel_send(belle_sip_channel_t *obj, const void *buf, size_t buflen){
 	belle_sip_udp_channel_t *chan=(belle_sip_udp_channel_t *)obj;
 	int err;
+//	printf("sending:\n%.*s\n", buflen, (char *)buf);
 	err=Xsendto(chan->sock,buf,buflen,0,obj->current_peer->ai_addr,obj->current_peer->ai_addrlen);
 	if (err==-1){
 		belle_sip_error("channel [%p]: could not send UDP packet because [%s]",obj,belle_sip_get_socket_error_string());
@@ -52,6 +53,7 @@ static int udp_channel_recv(belle_sip_channel_t *obj, void *buf, size_t buflen){
 	sockaddr_x addr;
 	socklen_t addrlen=sizeof(sockaddr_x);
 	err=Xrecvfrom(chan->sock,buf,buflen,0,(struct sockaddr*)&addr,&addrlen);
+	printf("received:\n%.*s\n", buflen, (char *)buf);
 	if (err==-1 && get_socket_error()!=BELLESIP_EWOULDBLOCK){
 		belle_sip_error("Could not receive UDP packet: %s",belle_sip_get_socket_error_string());
 		return -errno;
